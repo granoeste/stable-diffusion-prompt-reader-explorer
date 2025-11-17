@@ -5,6 +5,8 @@ __email__ = "receyuki@gmail.com"
 
 import platform
 import sys
+import os
+from pathlib import Path
 from tkinter import PhotoImage, Menu
 
 import pyperclip as pyperclip
@@ -471,6 +473,9 @@ class App(Tk):
         self.drop_target_register(DND_FILES)
         self.dnd_bind("<<Drop>>", self.display_info)
         self.bind("<Configure>", self.resize_image)
+        self.bind("<space>", self.open_next_file)
+        self.bind("<Left>", self.open_previous_file)
+        self.bind("<Right>", self.open_next_file)
 
         # update checker
         self.update_checker = UpdateChecker(self.status_bar)
@@ -483,6 +488,46 @@ class App(Tk):
 
     def open_document_handler(self, *args):
         self.display_info(args[0], is_selected=True)
+
+    def open_next_file(self, event=None):
+        if not self.file_path:
+            return
+
+        directory = self.file_path.parent
+        files = sorted([f for f in os.listdir(directory) if f.lower().endswith(tuple(SUPPORTED_FORMATS))], key=lambda x: x.lower())
+
+        if not files:
+            return
+
+        try:
+            current_index = files.index(self.file_path.name)
+            next_index = (current_index + 1) % len(files)
+            next_file = directory / files[next_index]
+            self.display_info(str(next_file), is_selected=True)
+        except ValueError:
+            # current file not in directory listing, open first file
+            next_file = directory / files[0]
+            self.display_info(str(next_file), is_selected=True)
+
+    def open_previous_file(self, event=None):
+        if not self.file_path:
+            return
+
+        directory = self.file_path.parent
+        files = sorted([f for f in os.listdir(directory) if f.lower().endswith(tuple(SUPPORTED_FORMATS))], key=lambda x: x.lower())
+
+        if not files:
+            return
+
+        try:
+            current_index = files.index(self.file_path.name)
+            prev_index = (current_index - 1 + len(files)) % len(files)
+            prev_file = directory / files[prev_index]
+            self.display_info(str(prev_file), is_selected=True)
+        except ValueError:
+            # current file not in directory listing, open last file
+            prev_file = directory / files[-1]
+            self.display_info(str(prev_file), is_selected=True)
 
     def display_info(self, event, is_selected=False):
         self.status_bar.unbind()
