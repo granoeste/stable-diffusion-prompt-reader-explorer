@@ -31,6 +31,7 @@ from .prompt_viewer import PromptViewer
 from .status_bar import StatusBar
 from .textbox import STkTextbox
 from .update_checker import UpdateChecker
+from .utility import load_icon, load_icon_single
 from .__version__ import VERSION
 from .logger import Logger
 
@@ -41,15 +42,8 @@ class App(Tk):
 
         logger = Logger("SD_Prompt_Reader.App")
         Logger.configure_global_logger("INFO")
-        # window = TkinterDnD.Tk()
-        # window = Tk()
         self.title("SD Prompt Reader")
         self.geometry("1280x600")
-        # set_appearance_mode("Light")
-        # deactivate_automatic_dpi_awareness()
-        # set_widget_scaling(1)
-        # set_window_scaling(0.8)
-        # info_font = CTkFont(size=20)
         self.info_font = CTkFont()
         self.scaling = ScalingTracker.get_window_dpi_scaling(self)
         set_default_color_theme(COLOR_THEME)
@@ -60,18 +54,18 @@ class App(Tk):
 
         # load icon images
         self.drop_image = CTkImage(Image.open(DROP_FILE), size=(48, 48))
-        self.clipboard_image = self.load_icon(COPY_FILE_L, (24, 24))
-        self.clipboard_image_s = self.load_icon(COPY_FILE_S, (20, 20))
-        self.clear_image = self.load_icon(CLEAR_FILE, (24, 24))
-        self.document_image = self.load_icon(DOCUMENT_FILE, (24, 24))
-        self.edit_image = self.load_icon(EDIT_FILE, (24, 24))
-        self.edit_off_image = self.load_icon(EDIT_OFF_FILE, (24, 24))
-        self.save_image = self.load_icon(SAVE_FILE, (24, 24))
-        self.expand_image = self.load_icon(EXPAND_FILE, (12, 24))
-        self.sort_image = self.load_icon(SORT_FILE, (20, 20))
-        self.view_image = self.load_icon(LIGHTBULB_FILE, (20, 20))
-        self.show_image = self.load_icon(SHOW_FILE, (20, 20))
-        self.hide_image = self.load_icon(HIDE_FILE, (20, 20))
+        self.clipboard_image = load_icon(COPY_FILE_L, (24, 24))
+        self.clipboard_image_s = load_icon(COPY_FILE_S, (20, 20))
+        self.clear_image = load_icon(CLEAR_FILE, (24, 24))
+        self.document_image = load_icon(DOCUMENT_FILE, (24, 24))
+        self.edit_image = load_icon(EDIT_FILE, (24, 24))
+        self.edit_off_image = load_icon(EDIT_OFF_FILE, (24, 24))
+        self.save_image = load_icon(SAVE_FILE, (24, 24))
+        self.expand_image = load_icon(EXPAND_FILE, (12, 24))
+        self.sort_image = load_icon(SORT_FILE, (20, 20))
+        self.view_image = load_icon(LIGHTBULB_FILE, (20, 20))
+        self.arrow_down_image = load_icon_single(KEYBOARD_ARROW_DOWN_FILE, (24, 24))
+        self.arrow_right_image = load_icon_single(KEYBOARD_ARROW_RIGHT_FILE, (24, 24))
         self.icon_image = CTkImage(Image.open(ICON_FILE), size=(100, 100))
         self.icon_cube_image = CTkImage(Image.open(ICON_CUBE_FILE), size=(100, 100))
 
@@ -81,20 +75,15 @@ class App(Tk):
             self.iconbitmap(ICO_FILE)
 
         # configure layout
-        self.rowconfigure(tuple(range(5)), weight=1)
-        self.rowconfigure(0, weight=0)  # Toolbar row - fixed height
-        self.rowconfigure(4, weight=0)  # Function buttons row - fixed height at bottom
+        self.rowconfigure(tuple(range(4)), weight=1)
+        self.rowconfigure(3, weight=0)  # Function buttons row - fixed height at bottom
         self.columnconfigure(tuple(range(7)), weight=1)
         self.columnconfigure(0, weight=6)
-        # self.rowconfigure(0, weight=2)
-        # self.rowconfigure(1, weight=2)
-        # self.rowconfigure(2, weight=1)
-        # self.rowconfigure(3, weight=1)
 
         # image display
         self.image_frame = CTkFrame(self)
         self.image_frame.grid(
-            row=0, column=0, rowspan=5, sticky="news", padx=20, pady=20
+            row=0, column=0, rowspan=4, sticky="news", padx=20, pady=20
         )
 
         self.image_label = CTkLabel(
@@ -123,7 +112,7 @@ class App(Tk):
         # status bar
         self.status_bar = StatusBar(self)
         self.status_bar.status_frame.grid(
-            row=4,
+            row=3,
             column=6,
             sticky="ew",
             padx=20,
@@ -132,72 +121,63 @@ class App(Tk):
             ipady=STATUS_BAR_IPAD,
         )
 
-        # Toolbar for toggle buttons
-        self.toolbar_frame = CTkFrame(self, fg_color="transparent", height=30)
-        self.toolbar_frame.grid(
-            row=0, column=1, columnspan=6, sticky="ew", padx=(0, 20), pady=(20, 0)
-        )
-        self.toolbar_frame.grid_columnconfigure(0, weight=1)  # Left spacer
-
-        # Toolbar label
-        self.toolbar_label = CTkLabel(
-            self.toolbar_frame, text="View Options", text_color=ACCESSIBLE_GRAY
-        )
-        self.toolbar_label.grid(row=0, column=0, sticky="w", padx=(10, 0))
-
-        # Toggle buttons frame (right side)
-        self.toggle_buttons_frame = CTkFrame(self.toolbar_frame, fg_color="transparent")
-        self.toggle_buttons_frame.grid(row=0, column=1, sticky="e", padx=(0, 10))
-
-        # Setting toggle button
-        self.button_toggle_setting = STkButton(
-            self.toggle_buttons_frame,
-            width=BUTTON_WIDTH_S,
-            height=BUTTON_HEIGHT_S,
-            image=self.show_image,
-            text="",
-            command=self.toggle_setting,
-        )
-        self.button_toggle_setting.pack(side="right", padx=(10, 0))
-        self.button_toggle_setting_tooltip = CTkToolTip(
-            self.button_toggle_setting,
-            delay=TOOLTIP_DELAY,
-            message="Toggle Setting visibility",
-        )
-
-        # Negative prompt toggle button
-        self.button_toggle_negative = STkButton(
-            self.toggle_buttons_frame,
-            width=BUTTON_WIDTH_S,
-            height=BUTTON_HEIGHT_S,
-            image=self.show_image,
-            text="",
-            command=self.toggle_negative_prompt,
-        )
-        self.button_toggle_negative.pack(side="right", padx=(10, 0))
-        self.button_toggle_negative_tooltip = CTkToolTip(
-            self.button_toggle_negative,
-            delay=TOOLTIP_DELAY,
-            message="Toggle Negative Prompt visibility",
-        )
-
         # textbox
         self.positive_box = PromptViewer(
-            self, self.status_bar, "Prompt"
+            self, self.status_bar, "Prompt", None, self.arrow_down_image, self.arrow_right_image
         )
         self.positive_box.viewer_frame.grid(
-            row=1, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(5, 20)
+            row=0, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(20, 20)
         )
 
-        self.negative_box = PromptViewer(self, self.status_bar, "Negative Prompt")
+        self.negative_box = PromptViewer(
+            self, self.status_bar, "Negative Prompt",
+            self.toggle_negative_prompt,
+            self.arrow_down_image,
+            self.arrow_right_image
+        )
         self.negative_box.viewer_frame.grid(
-            row=2, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(0, 20)
+            row=1, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(0, 20)
         )
 
-        self.setting_box = STkTextbox(self, wrap="word", height=80)
-        self.setting_box.grid(
-            row=3, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(1, 21)
+        # Setting box with header
+        self.setting_frame = CTkFrame(self, fg_color="transparent")
+        self.setting_frame.grid(
+            row=2, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(1, 21)
         )
+
+        # Setting header
+        self.setting_header_frame = CTkFrame(self.setting_frame, fg_color="transparent")
+        self.setting_header_frame.pack(fill="x", pady=(0, 5))
+
+        # Container for icon and label
+        self.setting_header_content = CTkFrame(self.setting_header_frame, fg_color="transparent")
+        self.setting_header_content.pack(side="left", fill="x", expand=True)
+
+        # Icon button (arrow) - using CTkButton instead of STkButton
+        self.button_toggle_setting_icon = CTkButton(
+            self.setting_header_content,
+            width=24,
+            height=24,
+            image=self.arrow_down_image,
+            text="",
+            command=self.toggle_setting,
+            fg_color="transparent",
+            hover_color=("gray86", "gray17"),
+        )
+        self.button_toggle_setting_icon.pack(side="left", padx=(5, 5))
+
+        # Label
+        self.setting_label = CTkLabel(
+            self.setting_header_content, text="Setting", text_color=ACCESSIBLE_GRAY
+        )
+        self.setting_label.pack(side="left", padx=(0, 10))
+
+        # Setting content frame
+        self.setting_content_frame = CTkFrame(self.setting_frame, fg_color="transparent")
+        self.setting_content_frame.pack(fill="both", expand=True)
+
+        self.setting_box = STkTextbox(self.setting_content_frame, wrap="word", height=80)
+        self.setting_box.pack(fill="both", expand=True)
         self.setting_box.text = "Setting"
 
         # setting box simple mode
@@ -283,7 +263,7 @@ class App(Tk):
         # function buttons container
         self.function_buttons_container = CTkFrame(self, fg_color="transparent")
         self.function_buttons_container.grid(
-            row=4, column=1, columnspan=5, sticky="s", pady=(0, 20), padx=(0, 20)
+            row=3, column=1, columnspan=5, sticky="s", pady=(0, 20), padx=(0, 20)
         )
 
         # edit
@@ -779,8 +759,6 @@ class App(Tk):
                 self.status_bar.success(MESSAGE["suffix"][0])
         else:
             match remove_mode:
-                # case "add suffix":
-                #
                 case "overwrite the original image":
                     try:
                         self.image_data.save_image(
@@ -937,60 +915,35 @@ class App(Tk):
                 self.setting_box_simple.grid_forget()
                 self.status_bar.info(MESSAGE["view_setting"][-1])
 
-    def toggle_negative_prompt(self):
-        if self.negative_prompt_visible:
-            self.negative_box.viewer_frame.grid_forget()
-            self.rowconfigure(2, weight=0)
-            self.negative_prompt_visible = False
-            self.button_toggle_negative.configure(image=self.hide_image)
+    def _toggle_section(self, frame, row_index, is_visible_attr, button):
+        """Generic toggle for collapsible sections"""
+        is_visible = getattr(self, is_visible_attr)
+        if is_visible:
+            frame.pack_forget()
+            self.rowconfigure(row_index, weight=0)
+            setattr(self, is_visible_attr, False)
+            button.configure(image=self.arrow_right_image)
         else:
-            self.negative_box.viewer_frame.grid(
-                row=2, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(0, 20)
-            )
-            self.rowconfigure(2, weight=1)
-            self.negative_prompt_visible = True
-            self.button_toggle_negative.configure(image=self.show_image)
+            frame.pack(fill="both", expand=True)
+            self.rowconfigure(row_index, weight=1)
+            setattr(self, is_visible_attr, True)
+            button.configure(image=self.arrow_down_image)
+
+    def toggle_negative_prompt(self):
+        self._toggle_section(
+            self.negative_box.prompt_frame,
+            1,
+            'negative_prompt_visible',
+            self.negative_box.button_toggle_icon
+        )
 
     def toggle_setting(self):
-        if self.setting_visible:
-            # Hide setting box
-            if hasattr(self, 'setting_mode') and self.setting_mode == SettingMode.SIMPLE:
-                self.setting_box_simple.grid_forget()
-            else:
-                self.setting_box.grid_forget()
-            self.rowconfigure(3, weight=0)
-            self.setting_visible = False
-            self.button_toggle_setting.configure(image=self.hide_image)
-        else:
-            # Show setting box
-            if hasattr(self, 'setting_mode') and self.setting_mode == SettingMode.SIMPLE:
-                self.setting_box_simple.grid(
-                    row=3, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(1, 21)
-                )
-            else:
-                self.setting_box.grid(
-                    row=3, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(1, 21)
-                )
-            self.rowconfigure(3, weight=1)
-            self.setting_visible = True
-            self.button_toggle_setting.configure(image=self.show_image)
-
-    @staticmethod
-    def mode_update(button: STkButton, textbox: STkTextbox, sort_button: STkButton):
-        match button.mode:
-            case ViewMode.NORMAL:
-                match sort_button.mode:
-                    case SortMode.ASC:
-                        textbox.sort_asc()
-                    case SortMode.DES:
-                        textbox.sort_des()
-            case ViewMode.VERTICAL:
-                textbox.view_vertical()
-                match sort_button.mode:
-                    case SortMode.ASC:
-                        textbox.sort_asc()
-                    case SortMode.DES:
-                        textbox.sort_des()
+        self._toggle_section(
+            self.setting_content_frame,
+            2,
+            'setting_visible',
+            self.button_toggle_setting_icon
+        )
 
     def select_image(self):
         initialdir = self.file_path.parent if self.file_path else "/"
@@ -998,13 +951,6 @@ class App(Tk):
             title="Select your image file",
             initialdir=initialdir,
             filetypes=(("image files", "*.png *.jpg *jpeg *.webp"),),
-        )
-
-    @staticmethod
-    def load_icon(icon_file, size):
-        return (
-            CTkImage(Image.open(icon_file[0]), size=size),
-            CTkImage(Image.open(icon_file[1]), size=size),
         )
 
 
