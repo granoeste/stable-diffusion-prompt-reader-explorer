@@ -126,7 +126,7 @@ class App(Tk):
             self, self.status_bar, "Prompt", None, self.arrow_down_image, self.arrow_right_image
         )
         self.positive_box.viewer_frame.grid(
-            row=0, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(20, 20)
+            row=0, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(20, 0)
         )
 
         self.negative_box = PromptViewer(
@@ -136,41 +136,35 @@ class App(Tk):
             self.arrow_right_image
         )
         self.negative_box.viewer_frame.grid(
-            row=1, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(0, 20)
+            row=1, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(0, 0)
         )
 
         # Setting box with header
         self.setting_frame = CTkFrame(self, fg_color="transparent")
         self.setting_frame.grid(
-            row=2, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(1, 21)
+            row=2, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(0, 21)
         )
 
         # Setting header
         self.setting_header_frame = CTkFrame(self.setting_frame, fg_color="transparent")
-        self.setting_header_frame.pack(fill="x", pady=(0, 5))
+        self.setting_header_frame.pack(fill="x")
 
-        # Container for icon and label
-        self.setting_header_content = CTkFrame(self.setting_header_frame, fg_color="transparent")
-        self.setting_header_content.pack(side="left", fill="x", expand=True)
-
-        # Icon button (arrow) - using CTkButton instead of STkButton
-        self.button_toggle_setting_icon = CTkButton(
-            self.setting_header_content,
-            width=24,
-            height=24,
+        # Combined label and icon button (clickable)
+        self.button_toggle_setting_header = CTkButton(
+            self.setting_header_frame,
+            text="Setting",
             image=self.arrow_down_image,
-            text="",
+            compound="right",  # Icon on the right side of text
             command=self.toggle_setting,
             fg_color="transparent",
             hover_color=("gray86", "gray17"),
+            text_color=ACCESSIBLE_GRAY,
+            anchor="w",  # Align text to the left
+            font=("", 13),
         )
-        self.button_toggle_setting_icon.pack(side="left", padx=(5, 5))
-
-        # Label
-        self.setting_label = CTkLabel(
-            self.setting_header_content, text="Setting", text_color=ACCESSIBLE_GRAY
-        )
-        self.setting_label.pack(side="left", padx=(0, 10))
+        self.button_toggle_setting_header.pack(side="left", fill="x", expand=True)
+        # Keep reference to button for icon updates
+        self.button_toggle_setting_icon = self.button_toggle_setting_header
 
         # Setting content frame
         self.setting_content_frame = CTkFrame(self.setting_frame, fg_color="transparent")
@@ -899,26 +893,42 @@ class App(Tk):
                     self.setting_box.pack(fill="both", expand=True)
                 self.status_bar.info(MESSAGE["view_setting"][-1])
 
-    def _toggle_section(self, frame, row_index, is_visible_attr, button):
+    def _toggle_section(self, frame, row_index, is_visible_attr, button, parent_frame=None, expanded_pady=(0, 20)):
         """Generic toggle for collapsible sections"""
         is_visible = getattr(self, is_visible_attr)
         if is_visible:
+            # Hide content
             frame.pack_forget()
-            self.rowconfigure(row_index, weight=0)
+            self.rowconfigure(row_index, weight=0, minsize=0)
             setattr(self, is_visible_attr, False)
             button.configure(image=self.arrow_right_image)
+            # Reduce parent frame padding when collapsed
+            if parent_frame:
+                parent_frame.grid(
+                    row=row_index, column=1, columnspan=6, sticky="news",
+                    padx=(0, 20), pady=(0, 5)
+                )
         else:
+            # Show content
             frame.pack(fill="both", expand=True)
             self.rowconfigure(row_index, weight=1)
             setattr(self, is_visible_attr, True)
             button.configure(image=self.arrow_down_image)
+            # Restore parent frame padding when expanded
+            if parent_frame:
+                parent_frame.grid(
+                    row=row_index, column=1, columnspan=6, sticky="news",
+                    padx=(0, 20), pady=expanded_pady
+                )
 
     def toggle_negative_prompt(self):
         self._toggle_section(
             self.negative_box.prompt_frame,
             1,
             'negative_prompt_visible',
-            self.negative_box.button_toggle_icon
+            self.negative_box.button_toggle_icon,
+            self.negative_box.viewer_frame,
+            expanded_pady=(0, 0)  # Negative Prompt has no bottom padding
         )
 
     def toggle_setting(self):
@@ -926,7 +936,9 @@ class App(Tk):
             self.setting_content_frame,
             2,
             'setting_visible',
-            self.button_toggle_setting_icon
+            self.button_toggle_setting_icon,
+            self.setting_frame,
+            expanded_pady=(0, 20)  # Setting has bottom padding
         )
 
     def select_image(self):

@@ -35,31 +35,31 @@ class PromptViewer:
         # Header frame with icon and label
         if default_text:
             self.header_frame = CTkFrame(self.viewer_frame, fg_color="transparent")
-            self.header_frame.pack(fill="x", pady=(0, 5))
-
-            # Container for icon and label (clickable)
-            self.header_content = CTkFrame(self.header_frame, fg_color="transparent")
-            self.header_content.pack(side="left", fill="x", expand=True)
+            self.header_frame.pack(fill="x")
 
             if toggle_callback and arrow_down_image:
-                # Icon button (arrow) - using CTkButton instead of STkButton
-                self.button_toggle_icon = CTkButton(
-                    self.header_content,
-                    width=24,
-                    height=24,
+                # Combined label and icon button (clickable)
+                self.button_toggle_header = CTkButton(
+                    self.header_frame,
+                    text=default_text,
                     image=arrow_down_image,
-                    text="",
+                    compound="right",  # Icon on the right side of text
                     command=toggle_callback,
                     fg_color="transparent",
                     hover_color=("gray86", "gray17"),
+                    text_color=ACCESSIBLE_GRAY,
+                    anchor="w",  # Align text to the left
+                    font=("", 13),
                 )
-                self.button_toggle_icon.pack(side="left", padx=(5, 5))
-
-            # Label
-            self.header_label = CTkLabel(
-                self.header_content, text=default_text, text_color=ACCESSIBLE_GRAY
-            )
-            self.header_label.pack(side="left", padx=(0, 10))
+                self.button_toggle_header.pack(side="left", fill="x", expand=True)
+                # Keep reference to button for icon updates
+                self.button_toggle_icon = self.button_toggle_header
+            else:
+                # Just a label (no toggle functionality)
+                self.header_label = CTkLabel(
+                    self.header_frame, text=default_text, text_color=ACCESSIBLE_GRAY
+                )
+                self.header_label.pack(side="left", padx=(5, 10))
 
         self.prompt_frame = CTkFrame(self.viewer_frame, fg_color="transparent")
         self.prompt_frame.pack(fill="both", expand=True)
