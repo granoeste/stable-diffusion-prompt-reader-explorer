@@ -14,13 +14,15 @@ from .utility import load_icon, copy_to_clipboard
 
 
 class PromptViewer:
-    def __init__(self, parent, status_bar, default_text):
+    def __init__(self, parent, status_bar, default_text, toggle_negative_prompt=None):
         self.clipboard_image = load_icon(COPY_FILE_L, (24, 24))
         self.clipboard_image_s = load_icon(COPY_FILE_S, (20, 20))
         self.sort_image = load_icon(SORT_FILE, (20, 20))
         self.view_image = load_icon(LIGHTBULB_FILE, (20, 20))
         self.separate_image = load_icon(VIEW_SEPARATE_FILE, (20, 20))
         self.tab_image = load_icon(VIEW_TAB_FILE, (20, 20))
+        self.hide_image = load_icon(HIDE_FILE, (20, 20))
+        self.show_image = load_icon(SHOW_FILE, (20, 20))
 
         self.status_bar = status_bar
         self.default_text = default_text
@@ -28,6 +30,30 @@ class PromptViewer:
         self.parent = parent
 
         self.viewer_frame = CTkFrame(self.parent, fg_color="transparent")
+
+        # Create a title frame
+        self.title_frame = CTkFrame(self.viewer_frame, fg_color="transparent")
+        self.title_frame.pack(fill="x", pady=(0, 5))
+
+        if default_text == "Prompt":
+            self.prompt_label = CTkLabel(
+                self.title_frame, text=default_text, text_color=ACCESSIBLE_GRAY
+            )
+            self.prompt_label.pack(side="left", padx=(10, 0))
+            self.button_hide = STkButton(
+                self.title_frame,
+                width=BUTTON_WIDTH_S,
+                height=BUTTON_HEIGHT_S,
+                image=self.show_image,
+                text="",
+                command=toggle_negative_prompt,
+            )
+            self.button_hide.pack(side="right", padx=(0, 10))
+        else:
+            self.prompt_label = CTkLabel(
+                self.title_frame, text=default_text, text_color=ACCESSIBLE_GRAY
+            )
+            self.prompt_label.pack(side="left", padx=(10, 0))
 
         self.prompt_frame = CTkFrame(self.viewer_frame, fg_color="transparent")
         self.prompt_frame.pack(fill="both", expand=True)

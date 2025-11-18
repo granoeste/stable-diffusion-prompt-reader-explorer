@@ -70,6 +70,8 @@ class App(Tk):
         self.expand_image = self.load_icon(EXPAND_FILE, (12, 24))
         self.sort_image = self.load_icon(SORT_FILE, (20, 20))
         self.view_image = self.load_icon(LIGHTBULB_FILE, (20, 20))
+        self.show_image = self.load_icon(SHOW_FILE, (20, 20))
+        self.hide_image = self.load_icon(HIDE_FILE, (20, 20))
         self.icon_image = CTkImage(Image.open(ICON_FILE), size=(100, 100))
         self.icon_cube_image = CTkImage(Image.open(ICON_CUBE_FILE), size=(100, 100))
 
@@ -112,6 +114,7 @@ class App(Tk):
         self.image_data = None
         self.textbox_fg_color = ThemeManager.theme["CTkTextbox"]["fg_color"]
         self.readable = False
+        self.negative_prompt_visible = True
 
         # status bar
         self.status_bar = StatusBar(self)
@@ -126,7 +129,9 @@ class App(Tk):
         )
 
         # textbox
-        self.positive_box = PromptViewer(self, self.status_bar, "Prompt")
+        self.positive_box = PromptViewer(
+            self, self.status_bar, "Prompt", self.toggle_negative_prompt
+        )
         self.positive_box.viewer_frame.grid(
             row=0, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(20, 20)
         )
@@ -561,9 +566,21 @@ class App(Tk):
                     if not self.image_data.is_sdxl:
                         self.positive_box.display(self.image_data.positive)
                         self.negative_box.display(self.image_data.negative)
+                        if not self.image_data.negative:
+                            if self.negative_prompt_visible:
+                                self.toggle_negative_prompt()
+                        else:
+                            if not self.negative_prompt_visible:
+                                self.toggle_negative_prompt()
                     else:
                         self.positive_box.display(self.image_data.positive_sdxl)
                         self.negative_box.display(self.image_data.negative_sdxl)
+                        if not self.image_data.negative_sdxl:
+                            if self.negative_prompt_visible:
+                                self.toggle_negative_prompt()
+                        else:
+                            if not self.negative_prompt_visible:
+                                self.toggle_negative_prompt()
                     self.setting_box.text = self.image_data.setting
                     self.setting_box_parameter.update_text(self.image_data.parameter)
                     self.positive_box.mode_update()
@@ -616,6 +633,8 @@ class App(Tk):
         self.setting_box.text = ""
         self.positive_box.display("")
         self.negative_box.display("")
+        if not self.negative_prompt_visible:
+            self.toggle_negative_prompt()
         self.setting_box_parameter.reset_text()
         for button in self.function_buttons:
             button.disable()
@@ -876,6 +895,20 @@ class App(Tk):
                 )
                 self.setting_box_simple.grid_forget()
                 self.status_bar.info(MESSAGE["view_setting"][-1])
+
+    def toggle_negative_prompt(self):
+        if self.negative_prompt_visible:
+            self.negative_box.viewer_frame.grid_forget()
+            self.rowconfigure(1, weight=0)
+            self.negative_prompt_visible = False
+            self.positive_box.button_hide.configure(image=self.hide_image)
+        else:
+            self.negative_box.viewer_frame.grid(
+                row=1, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(0, 20)
+            )
+            self.rowconfigure(1, weight=1)
+            self.negative_prompt_visible = True
+            self.positive_box.button_hide.configure(image=self.show_image)
 
     @staticmethod
     def mode_update(button: STkButton, textbox: STkTextbox, sort_button: STkButton):
