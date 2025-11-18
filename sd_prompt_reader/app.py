@@ -81,7 +81,9 @@ class App(Tk):
             self.iconbitmap(ICO_FILE)
 
         # configure layout
-        self.rowconfigure(tuple(range(4)), weight=1)
+        self.rowconfigure(tuple(range(5)), weight=1)
+        self.rowconfigure(0, weight=0)  # Toolbar row - fixed height
+        self.rowconfigure(4, weight=0)  # Function buttons row - fixed height at bottom
         self.columnconfigure(tuple(range(7)), weight=1)
         self.columnconfigure(0, weight=6)
         # self.rowconfigure(0, weight=2)
@@ -92,7 +94,7 @@ class App(Tk):
         # image display
         self.image_frame = CTkFrame(self)
         self.image_frame.grid(
-            row=0, column=0, rowspan=4, sticky="news", padx=20, pady=20
+            row=0, column=0, rowspan=5, sticky="news", padx=20, pady=20
         )
 
         self.image_label = CTkLabel(
@@ -115,11 +117,13 @@ class App(Tk):
         self.textbox_fg_color = ThemeManager.theme["CTkTextbox"]["fg_color"]
         self.readable = False
         self.negative_prompt_visible = True
+        self.setting_visible = True
+        self.setting_mode = SettingMode.NORMAL
 
         # status bar
         self.status_bar = StatusBar(self)
         self.status_bar.status_frame.grid(
-            row=3,
+            row=4,
             column=6,
             sticky="ew",
             padx=20,
@@ -128,22 +132,71 @@ class App(Tk):
             ipady=STATUS_BAR_IPAD,
         )
 
+        # Toolbar for toggle buttons
+        self.toolbar_frame = CTkFrame(self, fg_color="transparent", height=30)
+        self.toolbar_frame.grid(
+            row=0, column=1, columnspan=6, sticky="ew", padx=(0, 20), pady=(20, 0)
+        )
+        self.toolbar_frame.grid_columnconfigure(0, weight=1)  # Left spacer
+
+        # Toolbar label
+        self.toolbar_label = CTkLabel(
+            self.toolbar_frame, text="View Options", text_color=ACCESSIBLE_GRAY
+        )
+        self.toolbar_label.grid(row=0, column=0, sticky="w", padx=(10, 0))
+
+        # Toggle buttons frame (right side)
+        self.toggle_buttons_frame = CTkFrame(self.toolbar_frame, fg_color="transparent")
+        self.toggle_buttons_frame.grid(row=0, column=1, sticky="e", padx=(0, 10))
+
+        # Setting toggle button
+        self.button_toggle_setting = STkButton(
+            self.toggle_buttons_frame,
+            width=BUTTON_WIDTH_S,
+            height=BUTTON_HEIGHT_S,
+            image=self.show_image,
+            text="",
+            command=self.toggle_setting,
+        )
+        self.button_toggle_setting.pack(side="right", padx=(10, 0))
+        self.button_toggle_setting_tooltip = CTkToolTip(
+            self.button_toggle_setting,
+            delay=TOOLTIP_DELAY,
+            message="Toggle Setting visibility",
+        )
+
+        # Negative prompt toggle button
+        self.button_toggle_negative = STkButton(
+            self.toggle_buttons_frame,
+            width=BUTTON_WIDTH_S,
+            height=BUTTON_HEIGHT_S,
+            image=self.show_image,
+            text="",
+            command=self.toggle_negative_prompt,
+        )
+        self.button_toggle_negative.pack(side="right", padx=(10, 0))
+        self.button_toggle_negative_tooltip = CTkToolTip(
+            self.button_toggle_negative,
+            delay=TOOLTIP_DELAY,
+            message="Toggle Negative Prompt visibility",
+        )
+
         # textbox
         self.positive_box = PromptViewer(
-            self, self.status_bar, "Prompt", self.toggle_negative_prompt
+            self, self.status_bar, "Prompt"
         )
         self.positive_box.viewer_frame.grid(
-            row=0, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(20, 20)
+            row=1, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(5, 20)
         )
 
         self.negative_box = PromptViewer(self, self.status_bar, "Negative Prompt")
         self.negative_box.viewer_frame.grid(
-            row=1, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(0, 20)
+            row=2, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(0, 20)
         )
 
         self.setting_box = STkTextbox(self, wrap="word", height=80)
         self.setting_box.grid(
-            row=2, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(1, 21)
+            row=3, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(1, 21)
         )
         self.setting_box.text = "Setting"
 
@@ -227,12 +280,16 @@ class App(Tk):
             message=TOOLTIP["view_setting"],
         )
 
-        # function buttons
-        # edit
-        self.button_edit_frame = CTkFrame(self, fg_color="transparent")
-        self.button_edit_frame.grid(
-            row=3, column=1, pady=(0, 20), padx=(0, 20), sticky="w"
+        # function buttons container
+        self.function_buttons_container = CTkFrame(self, fg_color="transparent")
+        self.function_buttons_container.grid(
+            row=4, column=1, columnspan=5, sticky="s", pady=(0, 20), padx=(0, 20)
         )
+
+        # edit
+        self.button_edit_frame = CTkFrame(self.function_buttons_container, fg_color="transparent")
+        self.button_edit_frame.pack(side="left", padx=(0, 20))
+
         self.button_edit = STkButton(
             self.button_edit_frame,
             width=BUTTON_WIDTH_L,
@@ -258,10 +315,8 @@ class App(Tk):
         )
 
         # save
-        self.button_save_frame = CTkFrame(self, fg_color="transparent")
-        self.button_save_frame.grid(
-            row=3, column=2, pady=(0, 20), padx=(0, 20), sticky="w"
-        )
+        self.button_save_frame = CTkFrame(self.function_buttons_container, fg_color="transparent")
+        self.button_save_frame.pack(side="left", padx=(0, 20))
         self.button_save = STkButton(
             self.button_save_frame,
             width=BUTTON_WIDTH_L,
@@ -303,10 +358,8 @@ class App(Tk):
         )
 
         # remove
-        self.button_remove_frame = CTkFrame(self, fg_color="transparent")
-        self.button_remove_frame.grid(
-            row=3, column=3, pady=(0, 20), padx=(0, 20), sticky="w"
-        )
+        self.button_remove_frame = CTkFrame(self.function_buttons_container, fg_color="transparent")
+        self.button_remove_frame.pack(side="left", padx=(0, 20))
         self.button_remove = STkButton(
             self.button_remove_frame,
             width=BUTTON_WIDTH_L,
@@ -350,10 +403,8 @@ class App(Tk):
         )
 
         # export
-        self.button_export_frame = CTkFrame(self, fg_color="transparent")
-        self.button_export_frame.grid(
-            row=3, column=4, pady=(0, 20), padx=(0, 20), sticky="w"
-        )
+        self.button_export_frame = CTkFrame(self.function_buttons_container, fg_color="transparent")
+        self.button_export_frame.pack(side="left", padx=(0, 20))
         self.button_export = STkButton(
             self.button_export_frame,
             width=BUTTON_WIDTH_L,
@@ -397,8 +448,8 @@ class App(Tk):
         )
 
         # copy
-        self.button_copy_raw_frame = CTkFrame(self, fg_color="transparent")
-        self.button_copy_raw_frame.grid(row=3, column=5, pady=(0, 20), sticky="w")
+        self.button_copy_raw_frame = CTkFrame(self.function_buttons_container, fg_color="transparent")
+        self.button_copy_raw_frame.pack(side="left")
         self.button_raw = STkButton(
             self.button_copy_raw_frame,
             width=BUTTON_WIDTH_L,
@@ -566,21 +617,9 @@ class App(Tk):
                     if not self.image_data.is_sdxl:
                         self.positive_box.display(self.image_data.positive)
                         self.negative_box.display(self.image_data.negative)
-                        if not self.image_data.negative:
-                            if self.negative_prompt_visible:
-                                self.toggle_negative_prompt()
-                        else:
-                            if not self.negative_prompt_visible:
-                                self.toggle_negative_prompt()
                     else:
                         self.positive_box.display(self.image_data.positive_sdxl)
                         self.negative_box.display(self.image_data.negative_sdxl)
-                        if not self.image_data.negative_sdxl:
-                            if self.negative_prompt_visible:
-                                self.toggle_negative_prompt()
-                        else:
-                            if not self.negative_prompt_visible:
-                                self.toggle_negative_prompt()
                     self.setting_box.text = self.image_data.setting
                     self.setting_box_parameter.update_text(self.image_data.parameter)
                     self.positive_box.mode_update()
@@ -633,8 +672,6 @@ class App(Tk):
         self.setting_box.text = ""
         self.positive_box.display("")
         self.negative_box.display("")
-        if not self.negative_prompt_visible:
-            self.toggle_negative_prompt()
         self.setting_box_parameter.reset_text()
         for button in self.function_buttons:
             button.disable()
@@ -873,42 +910,70 @@ class App(Tk):
         match self.button_view_setting.mode:
             case SettingMode.NORMAL:
                 self.button_view_setting.mode = SettingMode.SIMPLE
-                self.setting_box_simple.grid(
-                    row=2,
-                    column=1,
-                    columnspan=6,
-                    sticky="news",
-                    padx=(0, 20),
-                    pady=(1, 21),
-                )
+                self.setting_mode = SettingMode.SIMPLE
+                if self.setting_visible:
+                    self.setting_box_simple.grid(
+                        row=3,
+                        column=1,
+                        columnspan=6,
+                        sticky="news",
+                        padx=(0, 20),
+                        pady=(1, 21),
+                    )
                 self.setting_box.grid_forget()
                 self.status_bar.info(MESSAGE["view_setting"][0])
             case SettingMode.SIMPLE:
                 self.button_view_setting.mode = SettingMode.NORMAL
-                self.setting_box.grid(
-                    row=2,
-                    column=1,
-                    columnspan=6,
-                    sticky="news",
-                    padx=(0, 20),
-                    pady=(1, 21),
-                )
+                self.setting_mode = SettingMode.NORMAL
+                if self.setting_visible:
+                    self.setting_box.grid(
+                        row=3,
+                        column=1,
+                        columnspan=6,
+                        sticky="news",
+                        padx=(0, 20),
+                        pady=(1, 21),
+                    )
                 self.setting_box_simple.grid_forget()
                 self.status_bar.info(MESSAGE["view_setting"][-1])
 
     def toggle_negative_prompt(self):
         if self.negative_prompt_visible:
             self.negative_box.viewer_frame.grid_forget()
-            self.rowconfigure(1, weight=0)
+            self.rowconfigure(2, weight=0)
             self.negative_prompt_visible = False
-            self.positive_box.button_hide.configure(image=self.hide_image)
+            self.button_toggle_negative.configure(image=self.hide_image)
         else:
             self.negative_box.viewer_frame.grid(
-                row=1, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(0, 20)
+                row=2, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(0, 20)
             )
-            self.rowconfigure(1, weight=1)
+            self.rowconfigure(2, weight=1)
             self.negative_prompt_visible = True
-            self.positive_box.button_hide.configure(image=self.show_image)
+            self.button_toggle_negative.configure(image=self.show_image)
+
+    def toggle_setting(self):
+        if self.setting_visible:
+            # Hide setting box
+            if hasattr(self, 'setting_mode') and self.setting_mode == SettingMode.SIMPLE:
+                self.setting_box_simple.grid_forget()
+            else:
+                self.setting_box.grid_forget()
+            self.rowconfigure(3, weight=0)
+            self.setting_visible = False
+            self.button_toggle_setting.configure(image=self.hide_image)
+        else:
+            # Show setting box
+            if hasattr(self, 'setting_mode') and self.setting_mode == SettingMode.SIMPLE:
+                self.setting_box_simple.grid(
+                    row=3, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(1, 21)
+                )
+            else:
+                self.setting_box.grid(
+                    row=3, column=1, columnspan=6, sticky="news", padx=(0, 20), pady=(1, 21)
+                )
+            self.rowconfigure(3, weight=1)
+            self.setting_visible = True
+            self.button_toggle_setting.configure(image=self.show_image)
 
     @staticmethod
     def mode_update(button: STkButton, textbox: STkTextbox, sort_button: STkButton):
