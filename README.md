@@ -52,6 +52,7 @@ A simple standalone viewer for reading prompt from Stable Diffusion generated im
 |                                                                                        | PNG | JPEG | WEBP | TXT* |
 |----------------------------------------------------------------------------------------|:---:|:----:|:----:|:----:|
 | [A1111's webUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)               |  ✅  |  ✅   |  ✅   |  ✅   |
+| [SD.Next](https://github.com/vladmandic/automatic)                                     |  ✅  |  ✅   |  ✅   |  ✅   |
 | [Easy Diffusion](https://github.com/easydiffusion/easydiffusion)                       |  ✅  |  ✅   |  ✅   |      |
 | [StableSwarmUI](https://github.com/Stability-AI/StableSwarmUI)*                        |  ✅  |  ✅   |      |      |
 | [StableSwarmUI (prior to 0.5.8-alpha)](https://github.com/Stability-AI/StableSwarmUI)* |  ✅  |  ✅   |      |      |

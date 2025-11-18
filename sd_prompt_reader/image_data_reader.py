@@ -23,6 +23,7 @@ from .format import (
     DrawThings,
     SwarmUI,
     Fooocus,
+    SDNext,
 )
 
 
@@ -78,6 +79,8 @@ class ImageDataReader:
                         else:
                             if "prompt" in self._info:
                                 self._tool = "ComfyUI\n(A1111 compatible)"
+                            elif "generator" in self._info:
+                                self._tool = "SD.Next"
                             else:
                                 self._tool = "A1111 webUI"
                             self._parser = A1111(info=self._info)
