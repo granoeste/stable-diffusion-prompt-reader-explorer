@@ -31,7 +31,7 @@ from .prompt_viewer import PromptViewer
 from .status_bar import StatusBar
 from .textbox import STkTextbox
 from .update_checker import UpdateChecker
-from .utility import load_icon, load_icon_single
+from .utility import load_icon, load_icon_single, get_images
 from .__version__ import VERSION
 from .logger import Logger
 
@@ -80,11 +80,17 @@ class App(Tk):
         self.columnconfigure(tuple(range(7)), weight=1)
         self.columnconfigure(0, weight=6)
 
-        # image display
-        self.image_frame = CTkFrame(self)
-        self.image_frame.grid(
+        # image display container
+        self.image_container = CTkFrame(self)
+        self.image_container.grid(
             row=0, column=0, rowspan=4, sticky="news", padx=20, pady=20
         )
+        self.image_container.rowconfigure(0, weight=1)
+        self.image_container.columnconfigure(1, weight=1)
+
+        # Main image display (column 1, so file list can be on the left at column 0)
+        self.image_frame = CTkFrame(self.image_container)
+        self.image_frame.grid(row=0, column=1, sticky="news")
 
         self.image_label = CTkLabel(
             self.image_frame,
@@ -100,9 +106,29 @@ class App(Tk):
             lambda e: self.display_info(self.select_image(), is_selected=True),
         )
 
+        # File list frame (initially hidden)
+        self.file_list_frame = CTkFrame(self.image_container, width=200)
+        self.file_list_visible = False
+
+        # File list scrollable frame
+        from customtkinter import CTkScrollableFrame
+        self.file_list_scroll = CTkScrollableFrame(
+            self.file_list_frame,
+            width=180,
+            fg_color="transparent",
+            scrollbar_button_color=("gray55", "gray41"),
+            scrollbar_button_hover_color=("gray40", "gray53")
+        )
+        self.file_list_scroll.pack(fill="both", expand=True, padx=5, pady=5)
+        # Configure scrollbar to only show when needed
+        self.file_list_scroll._scrollbar.grid_remove()  # Hide initially
+
         self.image = None
         self.image_tk = None
         self.image_data = None
+        self.file_path = None
+        self.current_dir_images = []
+        self.current_image_index = -1
         self.textbox_fg_color = ThemeManager.theme["CTkTextbox"]["fg_color"]
         self.readable = False
         self.negative_prompt_visible = True
@@ -557,6 +583,64 @@ class App(Tk):
             prev_file = directory / files[-1]
             self.display_info(str(prev_file), is_selected=True)
 
+    def toggle_file_list(self):
+        """Toggle file list visibility"""
+        if self.file_list_visible:
+            # Hide file list
+            self.file_list_frame.grid_forget()
+            self.image_container.columnconfigure(0, weight=0)
+            self.file_list_visible = False
+        else:
+            # Show file list on the left (column 0)
+            self.file_list_frame.grid(row=0, column=0, sticky="news", padx=(0, 5))
+            self.image_container.columnconfigure(0, weight=0, minsize=200)
+            self.file_list_visible = True
+
+    def update_file_list(self):
+        """Update the file list with images from current directory"""
+        if not self.file_path:
+            return
+
+        # Get all images in the current directory
+        current_dir = self.file_path.parent
+        self.current_dir_images = sorted(get_images(current_dir))
+
+        # Find current image index
+        try:
+            self.current_image_index = self.current_dir_images.index(self.file_path)
+        except ValueError:
+            self.current_image_index = -1
+
+        # Clear existing file list
+        for widget in self.file_list_scroll.winfo_children():
+            widget.destroy()
+
+        # Add files to list
+        for idx, img_path in enumerate(self.current_dir_images):
+            is_current = (idx == self.current_image_index)
+            file_button = CTkButton(
+                self.file_list_scroll,
+                text=img_path.name,
+                anchor="w",
+                fg_color=("gray75", "gray25") if is_current else "transparent",
+                hover_color=("gray86", "gray17"),
+                command=lambda p=img_path: self.display_info(str(p), is_selected=True)
+            )
+            file_button.pack(fill="x", pady=1)
+
+        # Show/hide scrollbar based on content size
+        self.file_list_scroll.update_idletasks()
+        if self.file_list_scroll._parent_canvas.yview() != (0.0, 1.0):
+            # Content is larger than visible area, show scrollbar
+            self.file_list_scroll._scrollbar.grid()
+        else:
+            # Content fits in visible area, hide scrollbar
+            self.file_list_scroll._scrollbar.grid_remove()
+
+        # Show file list if there are multiple images
+        if len(self.current_dir_images) > 1 and not self.file_list_visible:
+            self.toggle_file_list()
+
     def display_info(self, event, is_selected=False):
         self.status_bar.unbind()
         # stop update thread when reading first image
@@ -615,6 +699,8 @@ class App(Tk):
                 self.resize_image()
             if self.button_edit.mode == EditMode.ON:
                 self.edit_mode_update()
+            # Update file list after loading image
+            self.update_file_list()
 
         # txt importing
         elif new_path.suffix == ".txt":
