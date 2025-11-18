@@ -176,16 +176,14 @@ class App(Tk):
         self.setting_content_frame = CTkFrame(self.setting_frame, fg_color="transparent")
         self.setting_content_frame.pack(fill="both", expand=True)
 
+        # Normal mode setting box
         self.setting_box = STkTextbox(self.setting_content_frame, wrap="word", height=80)
         self.setting_box.pack(fill="both", expand=True)
         self.setting_box.text = "Setting"
 
-        # setting box simple mode
+        # Simple mode setting box (also inside setting_content_frame)
         self.setting_box_simple = CTkFrame(
-            self, height=80, fg_color=self.textbox_fg_color
-        )
-        self.setting_box_parameter = CTkFrame(
-            self.setting_box_simple, fg_color="transparent"
+            self.setting_content_frame, height=80, fg_color=self.textbox_fg_color
         )
         self.setting_box_parameter = ParameterViewer(
             self.setting_box_simple, self.status_bar
@@ -890,29 +888,15 @@ class App(Tk):
                 self.button_view_setting.mode = SettingMode.SIMPLE
                 self.setting_mode = SettingMode.SIMPLE
                 if self.setting_visible:
-                    self.setting_box_simple.grid(
-                        row=3,
-                        column=1,
-                        columnspan=6,
-                        sticky="news",
-                        padx=(0, 20),
-                        pady=(1, 21),
-                    )
-                self.setting_box.grid_forget()
+                    self.setting_box.pack_forget()
+                    self.setting_box_simple.pack(fill="both", expand=True)
                 self.status_bar.info(MESSAGE["view_setting"][0])
             case SettingMode.SIMPLE:
                 self.button_view_setting.mode = SettingMode.NORMAL
                 self.setting_mode = SettingMode.NORMAL
                 if self.setting_visible:
-                    self.setting_box.grid(
-                        row=3,
-                        column=1,
-                        columnspan=6,
-                        sticky="news",
-                        padx=(0, 20),
-                        pady=(1, 21),
-                    )
-                self.setting_box_simple.grid_forget()
+                    self.setting_box_simple.pack_forget()
+                    self.setting_box.pack(fill="both", expand=True)
                 self.status_bar.info(MESSAGE["view_setting"][-1])
 
     def _toggle_section(self, frame, row_index, is_visible_attr, button):
