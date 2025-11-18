@@ -13,3 +13,4 @@ requests~=2.32.1
 toml~=0.10.2
 CTkToolTip~=0.8
 click~=8.1.7
+packaging

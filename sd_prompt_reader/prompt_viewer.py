@@ -5,7 +5,7 @@ __email__ = "receyuki@gmail.com"
 
 
 from CTkToolTip import *
-from customtkinter import CTkFrame, CTkLabel, ThemeManager
+from customtkinter import CTkFrame, CTkLabel, CTkButton, ThemeManager
 
 from .button import STkButton, SortMode, ViewMode, PromptMode, EditMode
 from .constants import *
@@ -14,7 +14,7 @@ from .utility import load_icon, copy_to_clipboard
 
 
 class PromptViewer:
-    def __init__(self, parent, status_bar, default_text):
+    def __init__(self, parent, status_bar, default_text, toggle_callback=None, arrow_down_image=None, arrow_right_image=None):
         self.clipboard_image = load_icon(COPY_FILE_L, (24, 24))
         self.clipboard_image_s = load_icon(COPY_FILE_S, (20, 20))
         self.sort_image = load_icon(SORT_FILE, (20, 20))
@@ -26,8 +26,40 @@ class PromptViewer:
         self.default_text = default_text
         self.is_sdxl = False
         self.parent = parent
+        self.toggle_callback = toggle_callback
+        self.arrow_down_image = arrow_down_image
+        self.arrow_right_image = arrow_right_image
 
         self.viewer_frame = CTkFrame(self.parent, fg_color="transparent")
+
+        # Header frame with icon and label
+        if default_text:
+            self.header_frame = CTkFrame(self.viewer_frame, fg_color="transparent")
+            self.header_frame.pack(fill="x")
+
+            if toggle_callback and arrow_down_image:
+                # Combined label and icon button (clickable)
+                self.button_toggle_header = CTkButton(
+                    self.header_frame,
+                    text=default_text,
+                    image=arrow_down_image,
+                    compound="right",  # Icon on the right side of text
+                    command=toggle_callback,
+                    fg_color="transparent",
+                    hover_color=("gray86", "gray17"),
+                    text_color=ACCESSIBLE_GRAY,
+                    anchor="w",  # Align text to the left
+                    font=("", 13),
+                )
+                self.button_toggle_header.pack(side="left", fill="x", expand=True)
+                # Keep reference to button for icon updates
+                self.button_toggle_icon = self.button_toggle_header
+            else:
+                # Just a label (no toggle functionality)
+                self.header_label = CTkLabel(
+                    self.header_frame, text=default_text, text_color=ACCESSIBLE_GRAY
+                )
+                self.header_label.pack(side="left", padx=(5, 10))
 
         self.prompt_frame = CTkFrame(self.viewer_frame, fg_color="transparent")
         self.prompt_frame.pack(fill="both", expand=True)

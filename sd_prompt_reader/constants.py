@@ -55,6 +55,14 @@ VIEW_TAB_FILE = (
     Path(RESOURCE_DIR, "view_sidebar_20.png"),
     Path(RESOURCE_DIR, "view_sidebar_20_alpha.png"),
 )
+KEYBOARD_ARROW_DOWN_FILE = (
+    Path(RESOURCE_DIR, "keyboard_arrow_down_24.png"),
+    Path(RESOURCE_DIR, "keyboard_arrow_down_24_alpha.png"),
+)
+KEYBOARD_ARROW_RIGHT_FILE = (
+    Path(RESOURCE_DIR, "keyboard_arrow_right_24.png"),
+    Path(RESOURCE_DIR, "keyboard_arrow_right_24_alpha.png"),
+)
 ICON_FILE = Path(RESOURCE_DIR, "icon.png")
 ICON_CUBE_FILE = Path(RESOURCE_DIR, "icon-cube.png")
 ICO_FILE = Path(RESOURCE_DIR, "icon-gui.ico")

@@ -23,6 +23,15 @@ def load_icon(icon_file, size):
     )
 
 
+def load_icon_single(icon_file, size):
+    """Load icon as a single CTkImage with light and dark mode support"""
+    return CTkImage(
+        light_image=Image.open(icon_file[0]),
+        dark_image=Image.open(icon_file[1]),
+        size=size
+    )
+
+
 def get_images(dir_path: Path):
     images = [
         image.resolve()
